@@ -18,7 +18,7 @@ public class ClientEntity extends MainTable {
 
     public static final String PREFIX = "CLIENT#";
     public static final String SK_DATA = "CLIENTDATA";
-    public static final String EMAIL_PREFIX = "CLIENTMAIL#";
+    public static final String EMAIL_PREFIX = "CLIENTEMAIL#";
 
     private String name;
 
