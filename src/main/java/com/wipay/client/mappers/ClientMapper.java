@@ -45,12 +45,12 @@ public interface ClientMapper {
     ClientModel entityToModel(ClientEntity entity);
     List<ClientModel> entitiesToModels(List<ClientEntity> entities);
 
-    /// MODELO GENÉRICO -> SALIDA (servicio --devolver-completo-> controldor)
+    /// MODELO GENÉRICO -> SALIDA (servicio --devolver-completo-> controlador)
     // Los campos claves se descartan
     ClientResponse modelToResponse(ClientModel model);
     List<ClientResponse> modelsToResponses(List<ClientModel> models);
 
-    /// MODELO GENÉRICO -> SALIDA SIMPLE (servicio --devolver-simple-> controldor)
+    /// MODELO GENÉRICO -> SALIDA SIMPLE (servicio --devolver-simple-> controlador)
     // Los campos claves se descartan
     SimpleResponse modelToSimpleResponse(ClientModel model);
     List<SimpleResponse> modelsToSimpleResponses(List<ClientModel> models);
