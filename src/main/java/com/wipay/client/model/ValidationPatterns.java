@@ -3,7 +3,7 @@ package com.wipay.client.model;
 /**
  * Expresiones usadas en las validaciones de los modelos de cliente de entrada
  */
-public class ValidationPatterns {
+public final class ValidationPatterns {
     /** usuario@dominio.ext (extensión de al menos 2 letras). */
     public static final String EMAIL_REGEX =
             "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
