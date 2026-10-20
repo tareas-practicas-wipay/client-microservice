@@ -3,6 +3,7 @@ package com.wipay.client.controller;
 import com.wipay.client.mappers.ClientMapper;
 import com.wipay.client.model.ClientModel;
 import com.wipay.client.model.request.ClientRequest;
+import com.wipay.client.model.request.NameSearchRequest;
 import com.wipay.client.model.response.ClientResponse;
 import com.wipay.client.model.response.SimpleResponse;
 import com.wipay.client.service.ClientService;
@@ -14,8 +15,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * ---------------------------------------------------------
@@ -43,7 +47,7 @@ public class ClientController {
         return clientMapper.modelToResponse(created);
     }
 
-    /** Debe devolver un ClientResponse o un un SimpleResponse, dependiendo de si incluye el parámetro "GET /clients/{id}?simpleOutput=true"
+    /** Debe devolver un ClientResponse o un SimpleResponse, dependiendo de si incluye el parámetro 'GET /clients/{id}?simpleOutput=true'
      *  -SOLUCIÓN-> Devolver un objeto Object que se adapte a los dos casos de retorno
      */
     @GetMapping("/{id}")
@@ -58,5 +62,12 @@ public class ClientController {
                 ? clientMapper.modelToSimpleResponse(client) // Devuelve respuesta simple
                 : clientMapper.modelToResponse(client);      // Si no devuelve respuesta completa
 
+    }
+
+    @GetMapping("/search/by-name")
+    @Operation(summary = "Buscar clientes por nombre",
+                description = "Coincidencia parcial sin distinguir mayúsculas ('pay' encuentra 'Wipay')")
+    public List<ClientResponse> findByName(@Valid @ParameterObject NameSearchRequest name) {
+        return clientMapper.modelsToResponses(clientService.findByName(name.getName()));
     }
 }
