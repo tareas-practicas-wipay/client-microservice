@@ -12,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -47,21 +48,24 @@ public class ClientRepository {
     }
 
     public List<ClientEntity> findByName(String text) {
+        QueryConditional condition = QueryConditional.keyEqualTo(
+                key -> key.partitionValue(ClientEntity.ENTITY_TYPE));
+
         Expression filter = Expression.builder()
-                .expression("#sk = :sk AND contains(#keywords, :text)")
-                .putExpressionName("#sk", "SK")
+                .expression("contains(#keywords, :text)")
                 .putExpressionName("#keywords", "keywordsSearch")
-                .putExpressionValue(":sk", AttributeValue.fromS(ClientEntity.SK_DATA))
                 .putExpressionValue(":text", AttributeValue.fromS(ClientEntity.keywordsOf(text)))
                 .build();
 
-        ScanEnhancedRequest request = ScanEnhancedRequest.builder()
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(condition)
                 .filterExpression(filter)
                 .build();
 
-        return clientTable.scan(request)
-                .items()
+        return clientTable.index(MainTable.GINDEX3)
+                .query(request)
                 .stream()
+                .flatMap(page -> page.items().stream())
                 .toList();
     }
 }

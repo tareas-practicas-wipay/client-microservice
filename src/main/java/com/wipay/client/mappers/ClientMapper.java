@@ -37,6 +37,7 @@ public interface ClientMapper {
     @Mapping(target = "pk", expression = "java(ClientEntity.pkOf(model.getId()))")
     @Mapping(target = "sk", constant = ClientEntity.SK_DATA)
     @Mapping(target = "GIndex2Pk", expression = "java(ClientEntity.gIndex2PkOf(model.getEmail()))")
+    @Mapping(target = "GIndex3Pk", constant = ClientEntity.ENTITY_TYPE)
     @Mapping(target = "keywordsSearch", expression = "java(ClientEntity.keywordsOf(model.getName()))")
     ClientEntity modelToEntity(ClientModel model);
 
