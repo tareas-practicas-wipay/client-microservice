@@ -37,6 +37,27 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
 
+## Errores
+
+Los errores se devuelven con el formato estándar `ProblemDetail` (RFC 9457):
+
+```json
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "No existe ningún cliente con id abc",
+  "instance": "/clients/abc"
+}
+```
+
+| Código | Cuándo |
+|---|---|
+| `400` | Datos de entrada no válidos o JSON mal formado. En los errores de validación, `errors` indica el motivo de cada campo |
+| `404` | El cliente no existe |
+| `409` | El email ya pertenece a otro cliente |
+| `500` | Error inesperado. El detalle se registra en el log, no en la respuesta |º
+
 ## Modelo de datos
 
 Todas las entidades extienden de `MainTable`, que viene del starter de DynamoDB (diseño de tabla única).
