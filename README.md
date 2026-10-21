@@ -24,6 +24,19 @@ Permite crear, consultar y modificar clientes, y saber qué merchants pertenecen
 
 El servicio arranca en **http://localhost:8081**.
 
+## Endpoints
+
+Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/clients` | Crear un cliente |
+| `GET` | `/clients/{id}` | Obtener un cliente por id. Con `?simpleOutput=true` devuelve solo el id |
+| `GET` | `/clients/search/by-name?name=` | Buscar clientes cuyo nombre contiene el texto, sin distinguir mayúsculas |
+| `GET` | `/clients/search/by-email?email=` | Buscar un cliente por email, sin distinguir mayúsculas |
+
+El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
+
 ## Modelo de datos
 
 Todas las entidades extienden de `MainTable`, que viene del starter de DynamoDB (diseño de tabla única).
