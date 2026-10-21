@@ -1,10 +1,13 @@
 package com.wipay.client.service.impl;
 
+import com.wipay.client.config.ResilienceConfig;
 import com.wipay.client.exception.ServiceUnavailableException;
 import com.wipay.client.integration.MerchantFeignClient;
 import com.wipay.client.service.MerchantIntegrationService;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,17 +15,32 @@ import org.springframework.stereotype.Service;
 public class MerchantIntegrationServiceImpl implements MerchantIntegrationService {
 
     private final MerchantFeignClient merchantFeignClient;
+    private final CircuitBreakerFactory<?, ?> circuitBreakerFactory; // EXTRA
 
     @Override
     public boolean merchantExists(String merchantId) {
+        return circuitBreakerFactory.create(ResilienceConfig.MERCHANT_SERVICE)
+                .run(() -> callMerchantService(merchantId),
+                        error -> {
+                            throw unavailable(merchantId, error);
+                        });
+    }
+
+    /** El 404 se resuelve aquí dentro: para el circuit breaker es una llamada correcta. */
+    private boolean callMerchantService(String merchantId) {
         try {
             merchantFeignClient.findById(merchantId, true);
             return true;
         } catch (FeignException.NotFound ex) {
             return false;
-        } catch (FeignException ex) {
-            throw new ServiceUnavailableException(
-                    "No se ha podido consultar merchant-microservice para el merchant " + merchantId, ex);
         }
+    }
+
+    private ServiceUnavailableException unavailable(String merchantId, Throwable error) {
+        String reason = error instanceof CallNotPermittedException
+                ? "circuito abierto: merchant-microservice ha fallado varias veces seguidas"
+                : "no ha respondido correctamente";
+        return new ServiceUnavailableException(
+                "No se ha podido consultar el merchant " + merchantId + " (" + reason + ")", error);
     }
 }
