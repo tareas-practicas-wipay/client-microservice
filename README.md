@@ -99,5 +99,13 @@ src/main/java/com/wipay/client
 
 ## Seguimiento del estado del proyecto
 
-- [x] Creación del microservicio
-- [x] Dependencias: MapStruct, DynamoDB y Swagger
+- [x] Ejercicio 1: creación del microservicio y dependencias (MapStruct, DynamoDB y Swagger)
+- [x] Ejercicio 2: modelos, mappers, repositorio, servicio y endpoints
+    - [x] Crear cliente
+    - [x] Buscar por id, con salida completa o simple (`simpleOutput`)
+    - [x] Buscar por nombre (coincidencia parcial, sin distinguir mayúsculas)
+    - [x] Buscar por email, validado con `@Pattern`
+    - [x] Modificar cliente
+    - [x] Manejo de errores con `ProblemDetail`
+- [ ] Ejercicio 3: comunicación con merchant-microservice mediante Feign
+- [ ] Ejercicio 4: interceptor con validación de JWT
