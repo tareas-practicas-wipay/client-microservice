@@ -3,6 +3,7 @@ package com.wipay.client.controller;
 import com.wipay.client.mappers.ClientMapper;
 import com.wipay.client.model.ClientModel;
 import com.wipay.client.model.request.ClientRequest;
+import com.wipay.client.model.request.EmailSearchRequest;
 import com.wipay.client.model.request.NameSearchRequest;
 import com.wipay.client.model.response.ClientResponse;
 import com.wipay.client.model.response.SimpleResponse;
@@ -69,5 +70,12 @@ public class ClientController {
                 description = "Coincidencia parcial sin distinguir mayúsculas ('pay' encuentra 'Wipay')")
     public List<ClientResponse> findByName(@Valid @ParameterObject NameSearchRequest name) {
         return clientMapper.modelsToResponses(clientService.findByName(name.getName()));
+    }
+
+    @GetMapping("/search/by-email")
+    @Operation(summary = "Buscar clientes por email",
+                description = "Búsqueda exacta, sin distinguir mayúsculas")
+    public ClientResponse findByEmail(@Valid @ParameterObject EmailSearchRequest request) {
+        return clientMapper.modelToResponse(clientService.findByEmail(request.getEmail()));
     }
 }
