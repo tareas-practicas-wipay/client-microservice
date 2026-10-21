@@ -2,8 +2,7 @@
 
 Microservicio de **gestión de clientes** de Wipay.
 
-Permite crear, consultar y modificar clientes, y saber qué merchants pertenecen a cada cliente. Forma parte de un sistema de dos microservicios junto a [merchant-microservice](https://github.com/tareas-practicas-wipay/merchant-microservice).
-
+Permite crear, consultar y modificar clientes. Forma parte de un sistema de dos microservicios junto a [merchant-microservice](https://github.com/tareas-practicas-wipay/merchant-microservice), que es el que gestiona los merchants de cada cliente.
 ## Stack
 
 - Java: 21
