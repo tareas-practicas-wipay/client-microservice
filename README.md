@@ -12,6 +12,7 @@ Permite crear, consultar y modificar clientes. Forma parte de un sistema de dos 
 - MapStruct: 1.6.3
 - DynamoDB: wipay-dynamodb-spring-boot-starter 0.2.0-SNAPSHOT (AWS SDK v2 2.55.16)
 - Swagger / OpenAPI: springdoc-openapi 3.1.1
+- Spring Cloud: 2025.1.2 (OpenFeign 5.0.2), para las llamadas a merchant-microservice
 
 ## Requisitos previos
 

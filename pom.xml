@@ -32,6 +32,7 @@
 		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 		<springdoc.version>3.1.1</springdoc.version>
 		<wipay-dynamodb-starter.version>0.2.0-SNAPSHOT</wipay-dynamodb-starter.version>
+		<spring-cloud.version>2025.1.2</spring-cloud.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -76,7 +77,24 @@
 			<artifactId>wipay-dynamodb-spring-boot-starter</artifactId>
 			<version>${wipay-dynamodb-starter.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
