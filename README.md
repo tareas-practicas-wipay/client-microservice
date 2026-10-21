@@ -19,6 +19,7 @@ Permite crear, consultar y modificar clientes. Forma parte de un sistema de dos 
 - JDK 21
 - Docker Desktop y la infraestructura local levantada: ver [infraestructure](https://github.com/tareas-practicas-wipay/infraestructure)
 - El starter de DynamoDB instalado en el repositorio Maven local: clonar [dynamodb-spring-boot-starter](https://github.com/tareas-practicas-wipay/dynamodb-spring-boot-starter) y ejecutar `./mvnw clean install`
+- Para comprobar si existe un merchant, merchant-microservice debe estar arrancado en `http://localhost:8082` (se configura con `merchant.service.url`)
 
 ## Arranque
 
@@ -35,6 +36,7 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 | `GET` | `/clients/search/by-name?name=` | Buscar clientes cuyo nombre contiene el texto, sin distinguir mayúsculas |
 | `GET` | `/clients/search/by-email?email=` | Buscar un cliente por email, sin distinguir mayúsculas |
 | `PUT` | `/clients/{id}` | Modificar un cliente. Se envían todos los campos; el email no puede pertenecer a otro cliente |
+| `GET` | `/merchants/{merchantId}/exists` | Comprobar si existe un merchant, consultando merchant-microservice mediante Feign |
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
 
@@ -57,7 +59,27 @@ Los errores se devuelven con el formato estándar `ProblemDetail` (RFC 9457):
 | `400` | Datos de entrada no válidos o JSON mal formado. En los errores de validación, `errors` indica el motivo de cada campo |
 | `404` | El cliente no existe |
 | `409` | El email ya pertenece a otro cliente |
-| `500` | Error inesperado. El detalle se registra en el log, no en la respuesta |º
+| `500` | Error inesperado. El detalle se registra en el log, no en la respuesta |
+| `503` | merchant-microservice no está disponible o no ha respondido a tiempo |
+
+## Comunicación con merchant-microservice
+
+Se hace con Spring Cloud OpenFeign. La interfaz `MerchantFeignClient` (paquete `integration`) llama a `GET /merchants/{id}?simpleOutput=true`.
+
+| Respuesta de merchant-microservice | Respuesta de este servicio |
+|---|---|
+| `200` | `200` con `"exists": true` |
+| `404` | `200` con `"exists": false` |
+| Apagado, sin respuesta a tiempo u otro error | `503` |
+
+Tiempos de espera (en `application.properties`):
+
+```properties
+spring.cloud.openfeign.client.config.merchant-service.connect-timeout=2000
+spring.cloud.openfeign.client.config.merchant-service.read-timeout=3000
+```
+
+Sin ellos, Feign esperaría hasta 60 segundos a que merchant-microservice responda.
 
 ## Modelo de datos
 
@@ -91,11 +113,14 @@ La búsqueda por nombre lee todos los clientes y después filtra, porque DynamoD
 
 ```
 src/main/java/com/wipay/client
+├── config       → Configuración (Swagger, tabla de DynamoDB)
 ├── controller   → Controladores REST
-├── service      → Interfaces e implementaciones de la lógica de negocio
+├── exception    → Excepciones y manejo global de errores
+├── integration  → Clientes Feign hacia otros microservicios
+├── mappers      → Mappers de MapStruct
 ├── model        → Modelos generales, de entrada y de salida
 ├── repository   → Acceso a DynamoDB
-└── mappers      → Mappers de MapStruct
+└── service      → Interfaces e implementaciones de la lógica de negocio
 ```
 
 ## Seguimiento del estado del proyecto
