@@ -72,4 +72,11 @@ public class GlobalExceptionHandler {
         problem.setTitle(title);
         return problem;
     }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ProblemDetail handleServiceUnavailable(ServiceUnavailableException ex) {
+        log.warn("{}", ex.getMessage(), ex);
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "Servicio no disponible", ex.getMessage());
+    }
 }
