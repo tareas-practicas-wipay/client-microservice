@@ -133,5 +133,5 @@ src/main/java/com/wipay/client
     - [x] Buscar por email, validado con `@Pattern`
     - [x] Modificar cliente
     - [x] Manejo de errores con `ProblemDetail`
-- [ ] Ejercicio 3: comunicación con merchant-microservice mediante Feign
+- [x] Ejercicio 3: comunicación con merchant-microservice mediante Feign
 - [ ] Ejercicio 4: interceptor con validación de JWT
