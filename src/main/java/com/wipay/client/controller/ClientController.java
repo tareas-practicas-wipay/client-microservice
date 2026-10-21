@@ -78,4 +78,11 @@ public class ClientController {
     public ClientResponse findByEmail(@Valid @ParameterObject EmailSearchRequest request) {
         return clientMapper.modelToResponse(clientService.findByEmail(request.getEmail()));
     }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Modificar un cliente")
+    public ClientResponse update(@PathVariable String id, @Valid @RequestBody ClientRequest request) {
+        ClientModel updated = clientService.update(id, clientMapper.requestToModel(request));
+        return clientMapper.modelToResponse(updated);
+    }
 }

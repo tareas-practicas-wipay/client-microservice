@@ -12,4 +12,6 @@ public interface ClientService {
     List<ClientModel> findByName(String name);
 
     ClientModel findByEmail(String email);
+
+    ClientModel update(String id, ClientModel changes);
 }

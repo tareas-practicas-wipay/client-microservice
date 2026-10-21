@@ -7,6 +7,7 @@ import com.wipay.client.model.response.ClientResponse;
 import com.wipay.client.model.response.SimpleResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -54,5 +55,10 @@ public interface ClientMapper {
     /// MODELO GENÉRICO -> SALIDA SIMPLE (servicio --devolver-simple-> controlador)
     // Los campos claves se descartan
     SimpleResponse modelToSimpleResponse(ClientModel model);
-    List<SimpleResponse> modelsToSimpleResponses(List<ClientModel> models);
+
+    /// ACTUALIZAR MODELO
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createdDate", ignore = true) // Estos atributos se conservan, no se modifican
+    void updateModel(ClientModel changes, @MappingTarget ClientModel existing); // @MappingTarget indica que el parámetro no se crea, se modifica
 }

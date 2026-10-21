@@ -33,6 +33,7 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 | `GET` | `/clients/{id}` | Obtener un cliente por id. Con `?simpleOutput=true` devuelve solo el id |
 | `GET` | `/clients/search/by-name?name=` | Buscar clientes cuyo nombre contiene el texto, sin distinguir mayúsculas |
 | `GET` | `/clients/search/by-email?email=` | Buscar un cliente por email, sin distinguir mayúsculas |
+| `PUT` | `/clients/{id}` | Modificar un cliente. Se envían todos los campos; el email no puede pertenecer a otro cliente |
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
 

@@ -66,4 +66,19 @@ public class ClientServiceImpl implements ClientService {
                 .orElseThrow(() -> new NotFoundException("No existe ningún cliente con email " + email));
     }
 
+    @Override
+    public ClientModel update(String id, ClientModel changes) {
+        ClientModel existing = findById(id);
+
+        clientRepository.findByEmail(changes.getEmail())
+                .filter(other -> !other.getId().equals(id))
+                .ifPresent(other -> {
+                    throw new ConflictException("Ya existe otro cliente con el email " + changes.getEmail());
+                });
+
+        clientMapper.updateModel(changes, existing);
+
+        ClientEntity saved = clientRepository.save(clientMapper.modelToEntity(existing));
+        return clientMapper.entityToModel(saved);
+    }
 }
