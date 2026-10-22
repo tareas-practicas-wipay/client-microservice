@@ -42,6 +42,32 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
 
+## Autenticación con JWT
+
+Todas las peticiones, salvo `POST /tokens` y Swagger, deben llevar un JWT en el parámetro `token`:
+
+```
+GET /clients/{id}?token=eyJhbGciOiJIUzI1NiJ9...
+```
+
+El token contiene el nombre y la edad de quien hace la petición, y está firmado con HS256. El interceptor `JwtInterceptor` lo comprueba antes de que la petición llegue al controlador:
+
+| Situación | Respuesta |
+|---|---|
+| Sin token, token mal formado, con una firma no válida o caducado | `401` |
+| Token válido de un menor de 18 años | `403` |
+| Token válido de un mayor de edad | La petición continúa |
+
+Para probar, se genera un token con `POST /tokens`:
+
+```json
+{ "name": "Pablo", "age": 20 }
+```
+
+La clave de firma se configura con `jwt.secret` y se puede sobrescribir con la variable de entorno `JWT_SECRET`. Los tokens caducan según `jwt.expiration` (por defecto, `1h`).
+
+`POST /tokens` existe solo para la práctica: en un sistema real los tokens los emitiría un servidor de autenticación.
+
 ## Errores
 
 Los errores se devuelven con el formato estándar `ProblemDetail` (RFC 9457):
@@ -59,10 +85,13 @@ Los errores se devuelven con el formato estándar `ProblemDetail` (RFC 9457):
 | Código | Cuándo |
 |---|---|
 | `400` | Datos de entrada no válidos o JSON mal formado. En los errores de validación, `errors` indica el motivo de cada campo |
+| `401` | Falta el token, no es válido o ha caducado |
+| `403` | El token es de un menor de 18 años |
 | `404` | El cliente no existe |
 | `409` | El email ya pertenece a otro cliente |
 | `500` | Error inesperado. El detalle se registra en el log, no en la respuesta |
 | `503` | merchant-microservice no está disponible o no ha respondido a tiempo |
+
 
 ## Comunicación con merchant-microservice
 
@@ -133,6 +162,7 @@ src/main/java/com/wipay/client
 ├── controller   → Controladores REST
 ├── exception    → Excepciones y manejo global de errores
 ├── integration  → Clientes Feign hacia otros microservicios
+├── interceptor  → Interceptor que valida el JWT de cada petición
 ├── mappers      → Mappers de MapStruct
 ├── model        → Modelos generales, de entrada y de salida
 ├── repository   → Acceso a DynamoDB
