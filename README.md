@@ -103,6 +103,8 @@ Se hace con Spring Cloud OpenFeign. La interfaz `MerchantFeignClient` (paquete `
 | `404` | `200` con `"exists": false` |
 | Apagado, sin respuesta a tiempo u otro error | `503` |
 
+Las llamadas reenvían el token de la petición original, así que merchant-microservice aplica las mismas reglas de acceso. El token se lee antes de entrar en el circuit breaker, porque este ejecuta la llamada en otro hilo, donde ya no se puede acceder a la petición original.
+
 Tiempos de espera (en `application.properties`):
 
 ```properties
@@ -180,4 +182,4 @@ src/main/java/com/wipay/client
     - [x] Modificar cliente
     - [x] Manejo de errores con `ProblemDetail`
 - [x] Ejercicio 3: comunicación con merchant-microservice mediante Feign
-- [ ] Ejercicio 4: interceptor con validación de JWT
+- [x] Ejercicio 4: interceptor con validación de JWT
