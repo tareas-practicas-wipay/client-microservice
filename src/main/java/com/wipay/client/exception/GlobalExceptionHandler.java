@@ -79,4 +79,18 @@ public class GlobalExceptionHandler {
         log.warn("{}", ex.getMessage(), ex);
         return problem(HttpStatus.SERVICE_UNAVAILABLE, "Servicio no disponible", ex.getMessage());
     }
+
+    // Code 401
+    @ExceptionHandler(InvalidTokenException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ProblemDetail handleInvalidToken(InvalidTokenException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "No autenticado", ex.getMessage());
+    }
+
+    // Code 403
+    @ExceptionHandler(UnderageException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ProblemDetail handleUnderage(UnderageException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());
+    }
 }
