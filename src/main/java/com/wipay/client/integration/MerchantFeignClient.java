@@ -13,5 +13,6 @@ public interface MerchantFeignClient {
 
     @GetMapping("/merchants/{id}")
     MerchantSimpleResponse findById(@PathVariable("id") String id,
-                                    @RequestParam("simpleOutput") boolean simpleOutput);
+                                    @RequestParam("simpleOutput") boolean simpleOutput,
+                                    @RequestParam("token") String token);
 }
