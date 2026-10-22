@@ -13,6 +13,7 @@ Permite crear, consultar y modificar clientes. Forma parte de un sistema de dos 
 - DynamoDB: wipay-dynamodb-spring-boot-starter 0.2.0-SNAPSHOT (AWS SDK v2 2.55.16)
 - Swagger / OpenAPI: springdoc-openapi 3.1.1
 - Spring Cloud: 2025.1.2 (OpenFeign 5.0.2 y CircuitBreaker con Resilience4j), para las llamadas a merchant-microservice 
+- JWT: JJWT 0.13.0 (firma HS256)
 
 ## Requisitos previos
 
@@ -37,6 +38,7 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 | `GET` | `/clients/search/by-email?email=` | Buscar un cliente por email, sin distinguir mayúsculas |
 | `PUT` | `/clients/{id}` | Modificar un cliente. Se envían todos los campos; el email no puede pertenecer a otro cliente |
 | `GET` | `/merchants/{merchantId}/exists` | Comprobar si existe un merchant, consultando merchant-microservice mediante Feign |
+| `POST` | `/tokens` | Generar un JWT de prueba con un nombre y una edad |
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
 
