@@ -65,6 +65,12 @@ public class ClientController {
 
     }
 
+    @GetMapping
+    @Operation(summary = "Listar todos los clientes activos")
+    public List<ClientResponse> findAll() {
+        return clientMapper.modelsToResponses(clientService.findAll());
+    }
+
     @GetMapping("/search/by-name")
     @Operation(summary = "Buscar clientes por nombre",
                 description = "Coincidencia parcial sin distinguir mayúsculas ('pay' encuentra 'Wipay')")
@@ -84,5 +90,13 @@ public class ClientController {
     public ClientResponse update(@PathVariable String id, @Valid @RequestBody ClientRequest request) {
         ClientModel updated = clientService.update(id, clientMapper.requestToModel(request));
         return clientMapper.modelToResponse(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Borrar un cliente",
+            description = "Borrado lógico: el cliente pasa a status INACTIVE. Devuelve 409 si tiene merchants activos")
+    public void delete(@PathVariable String id) {
+        clientService.delete(id);
     }
 }

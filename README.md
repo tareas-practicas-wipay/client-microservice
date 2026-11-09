@@ -33,14 +33,22 @@ Documentación interactiva en **http://localhost:8081/swagger-ui.html**.
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/clients` | Crear un cliente |
+| `GET` | `/clients` | Listar todos los clientes activos |
 | `GET` | `/clients/{id}` | Obtener un cliente por id. Con `?simpleOutput=true` devuelve solo el id |
 | `GET` | `/clients/search/by-name?name=` | Buscar clientes cuyo nombre contiene el texto, sin distinguir mayúsculas |
 | `GET` | `/clients/search/by-email?email=` | Buscar un cliente por email, sin distinguir mayúsculas |
 | `PUT` | `/clients/{id}` | Modificar un cliente. Se envían todos los campos; el email no puede pertenecer a otro cliente |
+| `DELETE` | `/clients/{id}` | Borrar un cliente (borrado lógico). No se puede si tiene merchants activos |
 | `GET` | `/merchants/{merchantId}/exists` | Comprobar si existe un merchant, consultando merchant-microservice mediante Feign |
 | `POST` | `/tokens` | Generar un JWT de prueba con un nombre y una edad |
 
 El email debe tener un formato válido (`usuario@dominio.ext`); si no, se devuelve un 400.
+
+### Borrado lógico
+
+`DELETE /clients/{id}` no elimina el cliente de la tabla: cambia su `status` de `ACTIVE` a `INACTIVE` y devuelve `204`. A partir de ahí el cliente no aparece en ninguna consulta (se responde `404`) y su email se puede volver a usar en otro cliente.
+
+Antes de borrarlo se consultan sus merchants en merchant-microservice. Si tiene alguno activo se devuelve `409`, para no dejar merchants sin cliente: hay que borrarlos antes con `DELETE /merchants/{id}`.
 
 ## Autenticación con JWT
 
@@ -88,20 +96,23 @@ Los errores se devuelven con el formato estándar `ProblemDetail` (RFC 9457):
 | `401` | Falta el token, no es válido o ha caducado |
 | `403` | El token es de un menor de 18 años |
 | `404` | El cliente no existe |
-| `409` | El email ya pertenece a otro cliente |
+| `409` | El email ya pertenece a otro cliente, o se intenta borrar un cliente con merchants activos |
 | `500` | Error inesperado. El detalle se registra en el log, no en la respuesta |
 | `503` | merchant-microservice no está disponible o no ha respondido a tiempo |
 
 
 ## Comunicación con merchant-microservice
 
-Se hace con Spring Cloud OpenFeign. La interfaz `MerchantFeignClient` (paquete `integration`) llama a `GET /merchants/{id}?simpleOutput=true`.
+Se hace con Spring Cloud OpenFeign. La interfaz `MerchantFeignClient` (paquete `integration`) tiene dos llamadas:
 
-| Respuesta de merchant-microservice | Respuesta de este servicio |
-|---|---|
-| `200` | `200` con `"exists": true` |
-| `404` | `200` con `"exists": false` |
-| Apagado, sin respuesta a tiempo u otro error | `503` |
+- `GET /merchants/{id}?simpleOutput=true`, para `GET /merchants/{merchantId}/exists`.
+- `GET /merchants/search/by-client?clientId=`, para comprobar si un cliente tiene merchants antes de borrarlo.
+
+| Respuesta de merchant-microservice | Comprobar si existe un merchant | Borrar un cliente |
+|---|---|---|
+| `200` | `200` con `"exists": true` | Lista vacía: `204`. Con merchants: `409` |
+| `404` | `200` con `"exists": false` | `204` |
+| Apagado, sin respuesta a tiempo u otro error | `503` | `503`, y no se borra nada |
 
 Las llamadas reenvían el token de la petición original, así que merchant-microservice aplica las mismas reglas de acceso. El token se lee antes de entrar en el circuit breaker, porque este ejecuta la llamada en otro hilo, donde ya no se puede acceder a la petición original.
 
@@ -139,6 +150,8 @@ Todas las entidades extienden de `MainTable`, que viene del starter de DynamoDB 
 
 `keywordsSearch` no está en el guion: guarda el nombre en minúsculas para buscar sin distinguir mayúsculas.
 
+`status` vale `ACTIVE` al crear el cliente e `INACTIVE` cuando se borra (constantes en `model/EntityStatus`).
+
 ## Claves en DynamoDB
 
 | Atributo | Valor |
@@ -152,7 +165,10 @@ Todas las entidades extienden de `MainTable`, que viene del starter de DynamoDB 
 |---|---|
 | Cliente por id | GetItem con `PK` y `SK` |
 | Cliente por email | Query sobre `gIndex2` |
+| Todos los clientes | Query sobre `gIndex3` (`ENTITY#CLIENT`) |
 | Clientes por nombre | Query sobre `gIndex3` (`ENTITY#CLIENT`) con filtro `contains` sobre `keywordsSearch` |
+
+Todas las consultas añaden el filtro `status = ACTIVE`, salvo la de por id: GetItem no admite filtros, así que el status se comprueba en el repositorio después de leer.
 
 La búsqueda por nombre lee todos los clientes y después filtra, porque DynamoDB no permite buscar texto parcial con una condición de clave. Gracias a `gIndex3`, no lee los merchants ni el resto de la tabla.
 

@@ -4,9 +4,11 @@ import com.wipay.client.exception.ConflictException;
 import com.wipay.client.exception.NotFoundException;
 import com.wipay.client.mappers.ClientMapper;
 import com.wipay.client.model.ClientModel;
+import com.wipay.client.model.EntityStatus;
 import com.wipay.client.model.entity.ClientEntity;
 import com.wipay.client.repository.ClientRepository;
 import com.wipay.client.service.ClientService;
+import com.wipay.client.service.MerchantIntegrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
-    private static final String STATUS_ACTIVE = "ACTIVE";
-
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
+    private final MerchantIntegrationService merchantIntegrationService;
 
     @Override
     public ClientModel create(ClientModel client) {
@@ -40,7 +41,7 @@ public class ClientServiceImpl implements ClientService {
         }
 
         client.setId(UUID.randomUUID().toString());
-        client.setStatus(STATUS_ACTIVE);
+        client.setStatus(EntityStatus.ACTIVE);
         client.setCreatedDate(Instant.now());
 
         ClientEntity saved = clientRepository.save(clientMapper.modelToEntity(client));
@@ -52,6 +53,11 @@ public class ClientServiceImpl implements ClientService {
         return clientRepository.findById(id)
                 .map(clientMapper::entityToModel)
                 .orElseThrow(() -> new NotFoundException("No existe ningún cliente con id " + id));
+    }
+
+    @Override
+    public List<ClientModel> findAll() {
+        return clientMapper.entitiesToModels(clientRepository.findAll());
     }
 
     @Override
@@ -80,5 +86,20 @@ public class ClientServiceImpl implements ClientService {
 
         ClientEntity saved = clientRepository.save(clientMapper.modelToEntity(existing));
         return clientMapper.entityToModel(saved);
+    }
+
+    /// Borrado lógico: el cliente se queda en la tabla con status INACTIVE.
+    /// No se permite si aún tiene merchants activos, para no dejarlos sin cliente.
+    @Override
+    public void delete(String id) {
+        ClientModel existing = findById(id);
+
+        if (merchantIntegrationService.clientHasMerchants(id)) {
+            throw new ConflictException("No se puede borrar el cliente " + id
+                    + " porque tiene merchants activos. Hay que borrarlos antes");
+        }
+
+        existing.setStatus(EntityStatus.INACTIVE);
+        clientRepository.save(clientMapper.modelToEntity(existing));
     }
 }

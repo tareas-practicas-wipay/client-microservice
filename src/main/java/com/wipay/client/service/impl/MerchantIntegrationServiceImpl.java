@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.function.Supplier;
+
 @Service
 @RequiredArgsConstructor
 public class MerchantIntegrationServiceImpl implements MerchantIntegrationService {
@@ -23,28 +25,41 @@ public class MerchantIntegrationServiceImpl implements MerchantIntegrationServic
     public boolean merchantExists(String merchantId) {
         String token = requestTokenProvider.currentToken();   // en el hilo de la petición
 
+        return callMerchantService(() -> {
+            try {
+                merchantFeignClient.findById(merchantId, true, token);
+                return true;
+            } catch (FeignException.NotFound ex) {
+                return false;
+            }
+        }, "No se ha podido consultar el merchant " + merchantId);
+    }
+
+    @Override
+    public boolean clientHasMerchants(String clientId) {
+        String token = requestTokenProvider.currentToken();   // en el hilo de la petición
+
+        return callMerchantService(() -> {
+            try {
+                return !merchantFeignClient.findByClientId(clientId, token).isEmpty();
+            } catch (FeignException.NotFound ex) {
+                return false;   // merchant-microservice no encuentra el cliente: no puede tener merchants
+            }
+        }, "No se han podido consultar los merchants del cliente " + clientId);
+    }
+
+    /// Los 404 se resuelven dentro de cada llamada: para el circuit breaker son llamadas correctas.
+    private boolean callMerchantService(Supplier<Boolean> call, String errorMessage) {
         return circuitBreakerFactory.create(ResilienceConfig.MERCHANT_SERVICE)
-                .run(() -> callMerchantService(merchantId, token),
-                        error -> {
-                            throw unavailable(merchantId, error);
-                        });
+                .run(call, error -> {
+                    throw unavailable(errorMessage, error);
+                });
     }
 
-    /// El 404 se resuelve aquí dentro: para el circuit breaker es una llamada correcta.
-    private boolean callMerchantService(String merchantId, String token) {
-        try {
-            merchantFeignClient.findById(merchantId, true, token);
-            return true;
-        } catch (FeignException.NotFound ex) {
-            return false;
-        }
-    }
-
-    private ServiceUnavailableException unavailable(String merchantId, Throwable error) {
+    private ServiceUnavailableException unavailable(String errorMessage, Throwable error) {
         String reason = error instanceof CallNotPermittedException
                 ? "circuito abierto: merchant-microservice ha fallado varias veces seguidas"
                 : "no ha respondido correctamente";
-        return new ServiceUnavailableException(
-                "No se ha podido consultar el merchant " + merchantId + " (" + reason + ")", error);
+        return new ServiceUnavailableException(errorMessage + " (" + reason + ")", error);
     }
 }

@@ -9,9 +9,13 @@ public interface ClientService {
 
     ClientModel findById(String id);
 
+    List<ClientModel> findAll();
+
     List<ClientModel> findByName(String name);
 
     ClientModel findByEmail(String email);
 
     ClientModel update(String id, ClientModel changes);
+
+    void delete(String id);
 }
